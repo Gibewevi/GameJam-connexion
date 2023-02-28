@@ -1,8 +1,15 @@
+
 local GridView = {}
 
 function GridView.new(model)
     local view = {}
     view.grid = model
+
+    function view:drawNumbers()
+        for i = 1, #self.grid.numbers do
+            self.grid.numbers[i].controller.view:draw()
+        end
+    end
 
     function view:draw()
         local cellSize = self.grid.cellSize
@@ -18,6 +25,7 @@ function GridView.new(model)
                 )
             end
         end
+        self:drawNumbers()
     end
 
     return view

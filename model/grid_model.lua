@@ -1,4 +1,5 @@
-local number = require('model.number_model')
+local numberModel = require('model.number_model')
+local missionModel = require('model.mission_model')
 
 local GridModel = {}
 
@@ -13,17 +14,37 @@ function GridModel.new(rows, cols, posX, posY)
     grid.cellSize = (love.graphics.getWidth() / grid.cols)
     grid.cells = {}
     grid.numbers = {}
+    grid.missions = {}
 
     function grid:init()
         self.cells = {}
-        for i = 1, self.cols do
+        for i = 1, self.rows do
             self.cells[i] = {}
-            for j = 1, self.rows do
+            for j = 1, self.cols do
                 self.cells[i][j] = 0
+                self:addNumber(j,i)
             end
         end
+        self:generateMission()
         setmetatable(self.cells, self)
         return self.cells
+    end
+
+    function grid:addNumber(col, row)
+        local number = numberModel.new(self:getCellPosX(col),self:getCellPosY(row), self.cellSize)
+        number:initPosXY()
+        number:addController()
+        number:addView()
+        number:setColumn(col)
+        number:setRow(row)
+        table.insert(self.numbers, number)
+    end
+
+    function grid:generateMission()
+        local mission = missionModel.new(self.rows, self.cols)
+        mission:init(self.numbers, self.missions)
+        mission:addController(mission)
+        table.insert(self.missions, mission)
     end
 
     function grid:setCellSize(size)

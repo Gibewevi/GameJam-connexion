@@ -1,15 +1,34 @@
+local numberController = require('controller.number_controller')
+local numberView = require('view.number_view')
+
 local NumberModel = {}
-function NumberModel.new(value, x, y)
+function NumberModel.new(x, y, cellSize)
     local number = {}
-    number.value = value
+    number.value = tostring(math.random(0,9))
+    number.font = love.graphics.newFont(32)
+    number.w = number.font:getWidth(number.value)
+    number.h = number.font:getHeight(number.value)
     number.x = x
     number.y = y
     number.row = nil
     number.col = nil
     number.s = 1
-    number.w = nil
-    number.h = nil
+    number.cellSize = cellSize
     number.isHover = false
+    number.controller = nil
+
+    function number:initPosXY()
+        self:initPosX()
+        self:initPosY()
+    end
+
+    function number:initPosX()
+        self.x = self.x + (self.cellSize/2) - (self.w/2)
+    end
+
+    function number:initPosY()
+        self.y = self.y + (self.cellSize/2) - (self.h/2)
+    end
 
     function number:setColumn(column)
         self.col = column
@@ -17,6 +36,15 @@ function NumberModel.new(value, x, y)
 
     function number:setRow(row)
         self.row = row
+    end
+
+    function number:addController()
+        local controller = numberController.new(self)
+        self.controller = controller
+    end
+    
+    function number:addView()
+        self.controller.view = numberView.new(self)
     end
 
     return number
