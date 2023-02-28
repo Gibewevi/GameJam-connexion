@@ -1,6 +1,7 @@
 local MissionModel = {}
-function MissionModel.new(rows, cols)
+function MissionModel.new(rows, cols, order)
     local mission = {}
+    mission.order = order
     mission.cols = cols
     mission.rows = rows
     mission.maxNumbers = 4
@@ -14,11 +15,6 @@ function MissionModel.new(rows, cols)
         local numberMission = self:getRandomAvailableNumbers()
         table.insert(self.numbers, numberMission)
         self:chooseAvailableNeighbors(numberMission)
-        -- print("mission ------------")
-        -- for i = 1, #self.numbers do
-        --     print("number ",self.numbers[i].value)
-        -- end
-        -- print("mission ------------")
     end
 
     function mission:concatenatesMissionsTableInFirst(gridMissions)

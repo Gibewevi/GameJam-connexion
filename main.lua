@@ -6,7 +6,7 @@ local gridView = require("view.grid_view")
 
 function love.load()
     -- models
-    Grid = gridModel.new(10, 10, 0, 0)
+    Grid = gridModel.new(7, 10, 0, 0)
     Grid:init()
     GridController = gridController.new(Grid)
     GridView = gridView.new(Grid)

@@ -14,7 +14,9 @@ function GridModel.new(rows, cols, posX, posY)
     grid.cellSize = (love.graphics.getWidth() / grid.cols)
     grid.cells = {}
     grid.numbers = {}
+    grid.numberHover = {}
     grid.missions = {}
+    grid.numbersValid = {}
     grid.numbersAvailable = {}
     grid.maxMission = math.random(3,6)
 
@@ -48,19 +50,23 @@ function GridModel.new(rows, cols, posX, posY)
         local numbersAvailable = self:availableNumbers(numbersMission)
 
     end
- 
 
-    function grid:newMission()
-        local mission = missionModel.new(self.rows, self.cols)
-        mission:init(self.numbers, self.missions)
-        mission:addController(mission)
-        table.insert(self.missions, mission)
+
+    function grid:setNumberMissionOrder(missionNumbers)
+        for i = 1, #self.numbers do
+            for j,k in ipairs(missionNumbers) do
+                if k.col == self.numbers[i].col and k.row == self.numbers[i].row then
+                    self.numbers[i].missionOrder = k.order
+                end
+            end
+        end
     end
 
     function grid:generationAllMissions(nbMissions)
         for i = 1, nbMissions do
-            local mission = missionModel.new(self.rows, self.cols)
+            local mission = missionModel.new(self.rows, self.cols, #self.missions+1)
             mission:init(self.numbers, self.missions)
+            self:setNumberMissionOrder(mission.numbers)
             mission:addController(mission)
             table.insert(self.missions, mission)
         end

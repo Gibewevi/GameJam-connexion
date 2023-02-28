@@ -15,11 +15,13 @@ function NumberModel.new(x, y, cellSize)
     number.y = y
     number.row = nil
     number.col = nil
+    number.missionOrder = nil
     number.cellSize = cellSize
     number.isHover = false
     number.isAvailable = false
     number.onMission = false
     number.controller = nil
+    number.valid = nil
 
     function number:initPosXY()
         self:initPosX()
