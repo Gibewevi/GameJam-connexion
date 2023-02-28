@@ -3,25 +3,28 @@ function MissionModel.new(rows, cols)
     local mission = {}
     mission.cols = cols
     mission.rows = rows
-    mission.maxNumbers = math.random(1,4)
-    mission.numberAvailable = {}
+    mission.maxNumbers = 4
+    mission.numbersAvailable = {}
     mission.numbers = {}
     mission.controller = nil
 
     function mission:init(gridNumbers, gridMissions)
-        -- concaténer toutes les valeurs de gridMissions dans un autre tableau
         local missionNumbersAlreadyInUse = mission:concatenatesMissionsTableInFirst(gridMissions)
-        -- récuperer toutes les nombres disponibles
-        self.numberAvailable = self:availableNumbers(missionNumbersAlreadyInUse,gridNumbers)
-        -- selectionné le nombre épicentre de la mission
-        local numberMission = self:chooseRandomAvailableNumbers()
+        self.numbersAvailable = self:availableNumbers(missionNumbersAlreadyInUse, gridNumbers)
+        local numberMission = self:getRandomAvailableNumbers()
+        table.insert(self.numbers, numberMission)
         self:chooseAvailableNeighbors(numberMission)
+        -- print("mission ------------")
+        -- for i = 1, #self.numbers do
+        --     print("number ",self.numbers[i].value)
+        -- end
+        -- print("mission ------------")
     end
 
     function mission:concatenatesMissionsTableInFirst(gridMissions)
         local numbersMission = {}
         for i = 1, #gridMissions do
-            for j = 1, #gridMissions[i].numbers do   
+            for j = 1, #gridMissions[i].numbers do
                 table.insert(numbersMission, gridMissions[i].numbers[j])
             end
         end
@@ -29,37 +32,34 @@ function MissionModel.new(rows, cols)
     end
 
     function mission:availableNumbers(missionNumbers, gridNumbers)
-        local numberAvailable = {}
-            for i = 1, #gridNumbers do
-                local found = false
-                for j = 1, #missionNumbers do
-                    if gridNumbers[i].row == missionNumbers[j].row and gridNumbers[i].col == missionNumbers[j].col then
-                        found = true
-                        j = #missionNumbers
-                    end
-                end
-                if not found then
-                    table.insert(numberAvailable, gridNumbers[i])
+        local numbersAvailable = {}
+        for i = 1, #gridNumbers do
+            local found = false
+            for j = 1, #missionNumbers do
+                if gridNumbers[i].row == missionNumbers[j].row and gridNumbers[i].col == missionNumbers[j].col then
+                    found = true
+                    j = #missionNumbers
                 end
             end
-        for i = 1, #numberAvailable do
-            print("available value ",numberAvailable[i].value)
+            if not found then
+                table.insert(numbersAvailable, gridNumbers[i])
+            end
         end
-        return numberAvailable
+        return numbersAvailable
     end
 
-    function mission:chooseRandomAvailableNumbers()
-        local random = math.random(1,#self.numberAvailable)
+    function mission:getRandomAvailableNumbers()
+        local random = math.random(1, #self.numbersAvailable)
         local number = {}
-        number.col = self.numberAvailable[random].col
-        number.row = self.numberAvailable[random].row
-        number.value = self.numberAvailable[random].value
+        number.col = self.numbersAvailable[random].col
+        number.row = self.numbersAvailable[random].row
+        number.value = self.numbersAvailable[random].value
         self:removeAvailableNumberbyId(random)
         return number
     end
 
     function mission:getNumbersAvailableByColRow(col, row)
-        for i,j in ipairs(self.numberAvailable) do
+        for i, j in ipairs(self.numbersAvailable) do
             if j.col == col and j.row == row then
                 return i
             end
@@ -70,44 +70,55 @@ function MissionModel.new(rows, cols)
         self.controller = model
     end
 
-    function mission:chooseAvailableNeighbors(numberMission)
-        local neighborCol, neighborRow
-        local missionCol, missionRow = numberMission.col, numberMission.row
-        -- mettre à jour pendant la boucle
+    function mission:chooseAvailableNeighbors(number)
+        local missionCol, missionRow = number.col, number.row
+        local neighborsAvailable = self:neighborsAvailable(number)
+        self:addNumbersNeighbors(neighborsAvailable)
+    end
 
-        for i = 1, self.maxNumbers-1 do
-            repeat
-                local foundNeighbor = false
-                neighborCol = math.random(-1, 1)
-                neighborRow = math.random(-1, 1)
-                local indexNeighborCol = missionCol + neighborCol
-                local indexNeighborRow = missionRow + neighborRow
-                -- parcourir liste nombreAvailable jusqu'au nombre séléctionné
-                if self:isAvailable(indexNeighborCol, indexNeighborRow) then
-                    local numberId = self:getNumbersAvailableByColRow(indexNeighborCol, indexNeighborRow)
-                    table.insert(self.numbers, self.numberAvailable[numberId])
-                    self:removeAvailableNumberbyColRow(indexNeighborCol, indexNeighborRow)
-                    foundNeighbor = true
-                end
-            until neighborCol ~= 0 and neighborRow ~= 0 and foundNeighbor ~= false
-            return nil 
+    function mission:addNumbersNeighbors(neighborsTable)
+        local neighborsAvailable = neighborsTable
+
+        for i = 1, self.maxNumbers do
+            if #neighborsAvailable ~= 0 then
+                local randomNeighbor = math.random(1, #neighborsAvailable)
+                table.insert(self.numbers, neighborsAvailable[randomNeighbor])
+                table.remove(neighborsAvailable, randomNeighbor)
+            end
         end
     end
 
+    function mission:neighborsAvailable(number)
+        local neighborsAvailable = {}
+
+        for row = -1, 1 do
+            for col = -1, 1 do
+                local indexRowNeighbor = number.row + row
+                local indexColNeighbor = number.col + col
+                if self:isAvailable(indexColNeighbor, indexRowNeighbor) then
+                    local number = self:getNumberAvailableByColRow(indexColNeighbor, indexRowNeighbor)
+                    table.insert(neighborsAvailable, number)
+                end
+            end
+        end  
+        return neighborsAvailable
+    end
+
+
     function mission:removeAvailableNumberbyColRow(col, row)
-        for i,j in ipairs(self.numberAvailable) do
+        for i, j in ipairs(self.numbersAvailable) do
             if j.col == col and j.row == row then
-                table.remove(self.numberAvailable,i)
+                table.remove(self.numbersAvailable, i)
             end
         end
     end
 
     function mission:removeAvailableNumberbyId(id)
-        table.remove(self.numberAvailable,id)
+        table.remove(self.numbersAvailable, id)
     end
 
     function mission:isAvailable(col, row)
-        for i,j in ipairs(self.numberAvailable) do
+        for i, j in ipairs(self.numbersAvailable) do
             if j.col == col and j.row == row then
                 return true
             end
@@ -115,6 +126,15 @@ function MissionModel.new(rows, cols)
         return false
     end
 
+    function mission:getNumberAvailableByColRow(col, row)
+        for i, j in ipairs(self.numbersAvailable) do
+            if j.col == col and j.row == row then
+                return j
+            end
+        end
+    end
+
     return mission
 end
+
 return MissionModel

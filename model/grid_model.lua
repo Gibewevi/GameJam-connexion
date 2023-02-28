@@ -15,6 +15,8 @@ function GridModel.new(rows, cols, posX, posY)
     grid.cells = {}
     grid.numbers = {}
     grid.missions = {}
+    grid.numbersAvailable = {}
+    grid.maxMission = math.random(3,6)
 
     function grid:init()
         self.cells = {}
@@ -25,7 +27,7 @@ function GridModel.new(rows, cols, posX, posY)
                 self:addNumber(j,i)
             end
         end
-        self:generateMission()
+        self:generationAllMissions(self.maxMission)
         setmetatable(self.cells, self)
         return self.cells
     end
@@ -40,11 +42,61 @@ function GridModel.new(rows, cols, posX, posY)
         table.insert(self.numbers, number)
     end
 
-    function grid:generateMission()
+    function grid:numbersIsAvailable()
+        -- concatenates all missions
+        local numbersMission = self:concatenatesMissionsTables()
+        local numbersAvailable = self:availableNumbers(numbersMission)
+
+    end
+ 
+
+    function grid:newMission()
         local mission = missionModel.new(self.rows, self.cols)
         mission:init(self.numbers, self.missions)
         mission:addController(mission)
         table.insert(self.missions, mission)
+    end
+
+    function grid:generationAllMissions(nbMissions)
+        for i = 1, nbMissions do
+            local mission = missionModel.new(self.rows, self.cols)
+            mission:init(self.numbers, self.missions)
+            mission:addController(mission)
+            table.insert(self.missions, mission)
+        end
+        self:modifyStatusNumbersOnMission()
+    end
+
+    function grid:concatenatesMissionsOnOne()
+        local numbersMissions = {}
+        for i = 1, #self.missions do
+            for j = 1, #self.missions[i].numbers do
+                 table.insert(numbersMissions, self.missions[i].numbers[j])
+            end
+        end
+        return numbersMissions
+    end
+
+    function grid:modifyStatusNumbersOnMission()
+            local numbersMission = self:concatenatesMissionsOnOne()
+            local numberAvailable = {}
+            for i = 1, #self.numbers do
+                local found = false
+                for j = 1, #numbersMission do
+                    if self.numbers[i].row == numbersMission[j].row and self.numbers[i].col == numbersMission[j].col then
+                        found = true
+                        j = #numbersMission
+                    end
+                end
+                if not found then
+                    self.numbers[i].isAvailable = true
+                    self.numbers[i].onMission = false
+                    table.insert(numberAvailable, self.numbers[i])
+                else
+                    self.numbers[i].onMission = true
+                    self.numbers[i].isAvailable = false
+                end
+            end
     end
 
     function grid:setCellSize(size)

@@ -5,16 +5,20 @@ local NumberModel = {}
 function NumberModel.new(x, y, cellSize)
     local number = {}
     number.value = tostring(math.random(0,9))
-    number.font = love.graphics.newFont(32)
-    number.w = number.font:getWidth(number.value)
-    number.h = number.font:getHeight(number.value)
+    number.font = love.graphics.newFont(22)
+    number.s = 1
+    number.w = number.font:getWidth(number.value)*number.s
+    number.h = number.font:getHeight(number.value)*number.s
+    number.cellX = x
+    number.cellY = y
     number.x = x
     number.y = y
     number.row = nil
     number.col = nil
-    number.s = 1
     number.cellSize = cellSize
     number.isHover = false
+    number.isAvailable = false
+    number.onMission = false
     number.controller = nil
 
     function number:initPosXY()
