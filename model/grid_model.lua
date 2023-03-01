@@ -52,11 +52,11 @@ function GridModel.new(rows, cols, posX, posY)
     end
 
 
-    function grid:setNumberMissionOrder(missionNumbers)
+    function grid:setNumberMissionOrder(missionNumbers, order)
         for i = 1, #self.numbers do
             for j,k in ipairs(missionNumbers) do
                 if k.col == self.numbers[i].col and k.row == self.numbers[i].row then
-                    self.numbers[i].missionOrder = k.order
+                    self.numbers[i].missionOrder = order
                 end
             end
         end
@@ -64,9 +64,10 @@ function GridModel.new(rows, cols, posX, posY)
 
     function grid:generationAllMissions(nbMissions)
         for i = 1, nbMissions do
-            local mission = missionModel.new(self.rows, self.cols, #self.missions+1)
+            local order = #self.missions+1
+            local mission = missionModel.new(self.rows, self.cols, order)
             mission:init(self.numbers, self.missions)
-            self:setNumberMissionOrder(mission.numbers)
+            self:setNumberMissionOrder(mission.numbers, order)
             mission:addController(mission)
             table.insert(self.missions, mission)
         end

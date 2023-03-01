@@ -5,7 +5,7 @@ local NumberModel = {}
 function NumberModel.new(x, y, cellSize)
     local number = {}
     number.value = tostring(math.random(0,9))
-    number.font = love.graphics.newFont(22)
+    number.font = love.graphics.newFont(35)
     number.s = 1
     number.w = number.font:getWidth(number.value)*number.s
     number.h = number.font:getHeight(number.value)*number.s
@@ -20,6 +20,7 @@ function NumberModel.new(x, y, cellSize)
     number.isHover = false
     number.isAvailable = false
     number.onMission = false
+    number.isValid = false
     number.controller = nil
     number.valid = nil
 

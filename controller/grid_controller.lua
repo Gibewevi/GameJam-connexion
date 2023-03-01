@@ -19,48 +19,92 @@ function GridController.new(model)
     function controller:validNumbers()
         if self:numberIsHover() then
             local number = self:getNumberHover()
-            -- SI le numéro est dans une mission
             if self:isNumberAssignedToMission(number) then
-                -- SI la table numbersValid contient déjà quelque chose
                 if self:isNumbersValidTableNotEmpty() then
-                    -- SI le numéro fait bien partie de la même mission
                     if self:isInCurrentMission(number) then
-                        table.insert(self.model.numbersValid, number)
-                        for i,j in ipairs(self.model.numbersValid) do
-                            print('i', i, ' ', j.value)
+                        if self:isNumberNotValid(number) then
+                            self:setNumberIsValid(number)
+                            self:addNumbersInNumbersValid(number)
+                            return
                         end
-                        -- ajoute le numéro dans numbersValid
-                            -- SI si la série est complète
-                            -- valider la mission et supprimer les nombres
-                            -- supprimer la table numbersValid pour une nouvelle série
-                            -- SINON
-                            -- ajoute le numéro dans numbersValid
                     else
-                        -- SINON // Supprimer la table numbersValid et rajouté le numéro
+                        self:invalidatedNumbers()
+                        self:setNumberIsValid(number)
+                        table.insert(self.model.numbersValid, number)
+                        return
                     end
                 else
-                    -- Ajoute le numéro
+                    self:setNumberIsValid(number)
                     table.insert(self.model.numbersValid, number)
-                    for i,j in ipairs(self.model.numbersValid) do
-                        print('i', i, ' ', j.value)
-                    end
+                    return
                 end
             else
-                -- SINON supprimer la table numbersValid
+                self:invalidatedNumbers()
             end
         end
+    end
 
-        -- SI le numéro est dans une mission
-        -- SI la table numbersValid contient déjà quelque chose
-        -- SI le numéro fait bien partie de la même mission
+    function controller:invalidatedNumbers()
+        local actualOrder = self:getActualMissionOrder()
+            for i,j in ipairs(self.model.numbers) do
+                if j.missionOrder == actualOrder then
+                    j.isValid = false
+                end
+            end
+        self.model.numbersValid = {}
+    end
 
-        -- SI si la série est complète
-        -- valider la mission et supprimer les nombres
-        -- supprimer la table numbersValid pour une nouvelle série
-        -- SINON
+    function controller:setNumberIsValid(number)
+        for i,j in ipairs(self.model.numbers) do
+            if j.col == number.col and j.row == number.row then
+                j.isValid = true
+                print("value ",j.value," ",j.isValid)
+            end
+        end
+    end
+
+    function controller:addNumbersInNumbersValid(number)
         -- ajoute le numéro dans numbersValid
-        -- SINON // Supprimer la table numbersValid et rajouté le numéro
-        -- SINON supprimer la table numbersValid
+        table.insert(self.model.numbersValid, number)
+        if self:isMissionComplete() then
+            self:missionComplete()
+        end
+    end
+
+    function controller:missionComplete()
+        local orderMission = self:getActualMissionOrder()
+        for i = #self.model.numbers, 1, -1 do
+            local number = self.model.numbers[i]
+            if number.missionOrder == orderMission then
+                table.remove(self.model.numbers, i)
+            end
+        end
+    end
+    
+
+    function controller:isMissionComplete()
+        local orderActualMission = self:getActualMissionOrder()
+        if self:getNumbersMaxByOrderMission(orderActualMission) == #self.model.numbersValid then
+            return true
+        end
+        return false
+    end
+
+    function controller:getNumbersMaxByOrderMission(order)
+        for i = 1, #self.model.missions do
+            if self.model.missions[i].order == order then
+                return #self.model.missions[i].numbers
+            end
+        end
+    end
+
+    function controller:isNumberNotValid(number)
+        for i, j in ipairs(self.model.numbersValid) do
+            if number.col == j.col and number.row == j.row then
+                return false
+            end
+        end
+        return true
     end
 
     function controller:isInCurrentMission(number)
@@ -85,9 +129,10 @@ function GridController.new(model)
     end
 
     function controller:getActualMissionOrder()
-        print("#self.model.numbersValid", #self.model.numbersValid)
-        -- local order = self.model.numbersValid[0].missionOrder
-        -- return order
+        if #self.model.numbersValid ~= 0 then
+            local order = self.model.numbersValid[1].missionOrder
+            return order 
+        end
     end
 
     function controller:isNumbersValidTableNotEmpty()
@@ -127,8 +172,8 @@ function GridController.new(model)
         local mouseX, mouseY = love.mouse:getPosition()
         for i = 1, #self.model.numbers do
             local number = self.model.numbers[i]
-            if mouseX > number.x - number.cellSize / 2 and mouseX < number.x + number.cellSize / 2 and
-                mouseY > number.y - number.cellSize / 2 and mouseY < number.y + number.cellSize / 2 then
+            if mouseX > number.x - number.w and mouseX < number.x + number.w and
+                mouseY > number.y - number.h and mouseY < number.y + number.h then
                 number.isHover = true
                 self:setNumbersHover(number)
             else
